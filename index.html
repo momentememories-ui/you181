@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Happy Anniversary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,600;1,400&family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      font-family: 'Kanit', sans-serif;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #fff0f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+    }
+
+    .app-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-color: #fff0f3;
+      overflow: hidden;
+    }
+
+    .card-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .layer-3-message {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      z-index: 1;
+    }
+
+    #burnCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+
+    .layer-1-box {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    #fxCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .striker-fixed-container {
+      position: absolute;
+      bottom: 30px;
+      left: 20px;
+      z-index: 10;
+      transition: opacity 0.5s ease;
+    }
+
+    .matchbox-striker {
+      width: 210px;
+      height: 55px;
+      background: #880e4f;
+      border: 2px solid #560027;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(136,14,79,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fce4ec;
+      font-size: 13px;
+      font-weight: 400;
+      background-image: repeating-linear-gradient(45deg, #ad1457 0, #ad1457 5px, #880e4f 5px, #880e4f 10px);
+    }
+
+    .matchstick-item {
+      width: 450px;
+      height: 120px;
+      cursor: grab;
+      position: absolute;
+      bottom: 10px;
+      right: -20px;
+      z-index: 20;
+      touch-action: none;
+    }
+
+    .matchstick-item:active { cursor: grabbing; }
+    .matchstick-item img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+
+    .bouncing-heart-trigger {
+      position: absolute;
+      bottom: 35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 75px;
+      cursor: pointer;
+      z-index: 150;
+      display: none;
+      animation: heartBounce 1.2s infinite ease-in-out;
+      background: transparent !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      -webkit-tap-highlight-color: transparent;
+      filter: drop-shadow(0 4px 12px rgba(216, 27, 96, 0.6));
+    }
+
+    @keyframes heartBounce {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.25) rotate(-5deg); }
+    }
+
+    .big-heart-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff0f3;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .big-heart-container {
+      position: relative;
+      width: 230px;
+      height: 210px;
+      cursor: pointer;
+    }
+
+    .big-heart-shape {
+      width: 100%;
+      height: 100%;
+      background-color: #ffebee;
+      clip-path: path('M115,190 C115,190 20,125 20,65 C20,32 42,15 72,15 C91,15 105,25 115,38 C125,25 139,15 158,15 C188,15 210,32 210,65 C210,125 115,190 115,190 Z');
+      position: relative;
+      border: 3px solid #c2185b;
+      box-shadow: 0 10px 25px rgba(194, 24, 91, 0.4);
+    }
+
+    .heart-water-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(0deg, #880e4f, #c2185b, #e91e63, #ff4081);
+      transition: height 0.12s ease-out;
+      box-shadow: 0 -4px 12px rgba(194, 24, 91, 0.6);
+    }
+
+    .fill-instruction {
+      color: #ad1457;
+      font-size: 15px;
+      margin-top: 25px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      animation: pulseText 1.5s infinite;
+    }
+
+    @keyframes pulseText {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+
+    /* เปลี่ยนเป็นไฟล์ พื้นหลัง.jpg เรียบร้อยครับ */
+    .polaroid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('พื้นหลัง.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 300;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.4s ease;
+      overflow: hidden;
+    }
+
+    .polaroid-container { position: relative; width: 100%; height: 100%; }
+
+    .polaroid {
+      position: absolute;
+      width: 115px;
+      background: #ffffff;
+      padding: 6px 6px 10px 6px;
+      box-shadow: 0 4px 12px rgba(136, 14, 79, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  box-shadow 0.3s ease, 
+                  width 0.4s ease, 
+                  padding 0.4s ease,
+                  top 0.4s ease,
+                  left 0.4s ease;
+      will-change: transform, opacity, top, left;
+    }
+
+    .polaroid img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 2px;
+      display: block;
+      background-color: #fce4ec;
+      transition: max-height 0.4s ease;
+    }
+
+    .polaroid .close-card-btn {
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 26px;
+      height: 26px;
+      background: #c2185b;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 26px;
+      font-size: 13px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(194, 24, 91, 0.4);
+      cursor: pointer;
+      z-index: 10;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      transform: scale(0.6);
+    }
+
+    @keyframes burstAndSpread {
+      0% {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+        opacity: 0;
+      }
+      60% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1.1) rotate(var(--target-rotate));
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(var(--target-rotate));
+      }
+    }
+
+    @keyframes shakeAndFloat {
+      0%, 100% {
+        transform: translateY(0px) rotate(var(--target-rotate));
+      }
+      20% {
+        transform: translateY(-8px) rotate(calc(var(--target-rotate) - 6deg)) scale(1.03);
+      }
+      40% {
+        transform: translateY(4px) rotate(calc(var(--target-rotate) + 6deg)) scale(0.98);
+      }
+      60% {
+        transform: translateY(-6px) rotate(calc(var(--target-rotate) - 4deg)) scale(1.02);
+      }
+      80% {
+        transform: translateY(2px) rotate(calc(var(--target-rotate) + 3deg)) scale(1);
+      }
+    }
+
+    .polaroid.animate-burst {
+      animation: burstAndSpread 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .polaroid.idle-bounce {
+      animation: shakeAndFloat var(--anim-duration, 2s) ease-in-out infinite;
+      animation-delay: var(--anim-delay, 0s);
+    }
+
+    .polaroid.active {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
+      z-index: 999 !important;
+      width: fit-content !important;
+      max-width: 82vw !important;
+      height: auto !important;
+      padding: 8px 8px 12px 8px !important;
+      box-shadow: 0 25px 50px rgba(136, 14, 79, 0.35) !important;
+      border-radius: 6px;
+      animation: none !important;
+      opacity: 1 !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .polaroid.active img {
+      width: auto !important;
+      max-width: 100% !important;
+      max-height: 65vh !important;
+      object-fit: contain !important;
+      border-radius: 4px;
+      background-color: #ffffff;
+    }
+
+    .polaroid.active .close-card-btn {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    .back-to-message-btn {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #c2185b;
+      color: #ffffff;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      z-index: 400;
+      box-shadow: 0 4px 15px rgba(194, 24, 91, 0.5);
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .back-to-message-btn:active {
+      transform: translateX(-50%) scale(0.95);
+      background: #880e4f;
+    }
+
+    .floating-heart {
+      position: absolute;
+      pointer-events: none;
+      z-index: 350;
+      font-size: 26px;
+      animation: floatUp 2.2s ease-out forwards;
+      filter: drop-shadow(0 2px 6px rgba(194, 24, 91, 0.5));
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-380px) scale(1.5) rotate(30deg); opacity: 0; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <audio id="bgMusic" loop preload="auto">
+    <source src="song.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="app-viewport" id="viewport">
+    <div class="card-container" id="cardContainer">
+      <img src="กระดาษ3.png" class="layer-3-message" alt="ข้อความ">
+      <canvas id="burnCanvas"></canvas>
+      <img src="กล่อง.png" class="layer-1-box" alt="กล่อง">
+      <canvas id="fxCanvas"></canvas>
+    </div>
+
+    <div class="striker-fixed-container" id="strikerContainer">
+      <div class="matchbox-striker" id="strikerStrip">
+        ถูไม้ขีดตรงนี้เพื่อจุดไฟ🔥
+      </div>
+    </div>
+
+    <div class="matchstick-item" id="draggableMatch">
+      <img id="matchImg" src="ไม้ขีด.png" alt="ไม้ขีด">
+    </div>
+
+    <div class="bouncing-heart-trigger" id="heartTrigger">❤️</div>
+
+    <div class="big-heart-modal" id="heartModal">
+      <div class="big-heart-container" id="bigHeartContainer">
+        <div class="big-heart-shape">
+          <div class="heart-water-fill" id="waterFill"></div>
+        </div>
+      </div>
+      <p class="fill-instruction">แตะหรือกดค้างเพื่อเติมความรัก ✨</p>
+    </div>
+
+    <div class="polaroid-overlay" id="polaroidOverlay">
+      <div class="polaroid-container" id="polaroidContainer"></div>
+      <button class="back-to-message-btn" id="backBtn">ย้อนกลับ</button>
+    </div>
+  </div>
+
+  <script>
+    const viewport = document.getElementById('viewport');
+    const canvas = document.getElementById('burnCanvas');
+    const ctx = canvas.getContext('2d');
+    const fxCanvas = document.getElementById('fxCanvas');
+    const fxCtx = fxCanvas.getContext('2d');
+    const bgMusic = document.getElementById('bgMusic');
+
+    const matchEl = document.getElementById('draggableMatch');
+    const matchImg = document.getElementById('matchImg');
+    const strikerStrip = document.getElementById('strikerStrip');
+    const strikerContainer = document.getElementById('strikerContainer');
+    const heartTrigger = document.getElementById('heartTrigger');
+    const backBtn = document.getElementById('backBtn');
+
+    let continuousHeartsInterval = null;
+
+    function playAudioOnFirstInteraction() {
+      if (bgMusic && bgMusic.paused) {
+        bgMusic.play().then(() => {
+          console.log("Music started playing automatically");
+        }).catch((err) => {
+          console.log("Autoplay waiting for interaction:", err);
+        });
+      }
+      window.removeEventListener('touchstart', playAudioOnFirstInteraction);
+      window.removeEventListener('click', playAudioOnFirstInteraction);
+      window.removeEventListener('mousedown', playAudioOnFirstInteraction);
+    }
+
+    window.addEventListener('touchstart', playAudioOnFirstInteraction, { passive: true });
+    window.addEventListener('click', playAudioOnFirstInteraction);
+    window.addEventListener('mousedown', playAudioOnFirstInteraction);
+
+    let isLit = false;
+    let frictionScore = 0;
+    let isDraggingMatch = false;
+    let autoBurning = false;
+    let burnRadius = 0;
+    let maxBurnRadius = 0;
+
+    let dragOffsetX
