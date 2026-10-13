@@ -47,6 +47,7 @@
       overflow: hidden;
     }
 
+    /* กระดาษข้อความด้านหลัง (กระดาษ3) */
     .layer-3-message {
       position: absolute;
       top: 0;
@@ -57,6 +58,7 @@
       z-index: 1;
     }
 
+    /* แคนวาสสำหรับขูดกระดาษ (กระดาษ2) */
     #burnCanvas {
       position: absolute;
       top: 0;
@@ -66,6 +68,7 @@
       z-index: 2;
     }
 
+    /* กล่องด้านหน้า */
     .layer-1-box {
       position: absolute;
       top: 0;
@@ -73,7 +76,7 @@
       width: 100%;
       height: 100%;
       object-fit: fill;
-      z-index: 4;
+      z-index: 3;
       pointer-events: none;
     }
 
@@ -118,7 +121,7 @@
       position: absolute;
       bottom: 10px;
       right: -20px;
-      z-index: 20;
+      z-index: 200;
       touch-action: none;
     }
 
@@ -205,7 +208,6 @@
       50% { opacity: 1; }
     }
 
-    /* เปลี่ยนเป็นไฟล์ พื้นหลัง.jpg เรียบร้อยครับ */
     .polaroid-overlay {
       position: absolute;
       top: 0;
@@ -457,9 +459,7 @@
 
     function playAudioOnFirstInteraction() {
       if (bgMusic && bgMusic.paused) {
-        bgMusic.play().then(() => {
-          console.log("Music started playing automatically");
-        }).catch((err) => {
+        bgMusic.play().catch((err) => {
           console.log("Autoplay waiting for interaction:", err);
         });
       }
@@ -479,4 +479,412 @@
     let burnRadius = 0;
     let maxBurnRadius = 0;
 
-    let dragOffsetX
+    let dragOffsetX = 0, dragOffsetY = 0;
+    let lastX = 0, lastY = 0;
+
+    let particles = [];
+
+    const noiseAngles = [];
+    const numPoints = 120;
+    for (let i = 0; i < numPoints; i++) {
+      const wave = Math.sin(i * 0.1) * 0.12 + Math.cos(i * 0.2) * 0.08;
+      noiseAngles.push(0.95 + wave);
+    }
+
+    const paperImg = new Image();
+    paperImg.src = 'กระดาษ2.png';
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = viewport.getBoundingClientRect();
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+
+      fxCanvas.width = rect.width * dpr;
+      fxCanvas.height = rect.height * dpr;
+      fxCanvas.style.width = rect.width + 'px';
+      fxCanvas.style.height = rect.height + 'px';
+
+      ctx.scale(dpr, dpr);
+      fxCtx.scale(dpr, dpr);
+
+      maxBurnRadius = Math.hypot(rect.width / 2, rect.height / 2);
+      drawPaper(rect.width, rect.height);
+    }
+
+    function drawPaper(w, h) {
+      if (paperImg.complete && paperImg.naturalWidth !== 0) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(paperImg, 0, 0, w, h);
+      }
+    }
+
+    paperImg.onload = () => {
+      resizeCanvas();
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function createSparks(x, y, count = 3, spread = 8) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * spread,
+          vy: (Math.random() - 0.5) * spread - 1.2,
+          size: Math.random() * 3 + 1,
+          color: `hsl(${Math.random() * 20 + 340}, 100%, 50%)`,
+          alpha: 1,
+          life: Math.random() * 18 + 10
+        });
+      }
+    }
+
+    function updateParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.04;
+        p.life--;
+
+        if (p.alpha <= 0 || p.life <= 0) {
+          particles.splice(i, 1);
+        } else {
+          fxCtx.save();
+          fxCtx.globalAlpha = Math.max(0, p.alpha);
+          fxCtx.fillStyle = p.color;
+          fxCtx.beginPath();
+          fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          fxCtx.fill();
+          fxCtx.restore();
+        }
+      }
+    }
+
+    function onStart(e) {
+      if (e.cancelable) e.preventDefault();
+      isDraggingMatch = true;
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      const rect = matchEl.getBoundingClientRect();
+      dragOffsetX = clientX - rect.left;
+      dragOffsetY = clientY - rect.top;
+
+      lastX = clientX;
+      lastY = clientY;
+    }
+
+    function onMove(e) {
+      if (!isDraggingMatch) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      const vpRect = viewport.getBoundingClientRect();
+      const relativeX = clientX - vpRect.left;
+      const relativeY = clientY - vpRect.top;
+
+      const deltaX = Math.abs(clientX - lastX);
+      const deltaY = Math.abs(clientY - lastY);
+      const moveDistance = Math.hypot(deltaX, deltaY);
+
+      lastX = clientX;
+      lastY = clientY;
+
+      matchEl.style.position = 'absolute';
+      matchEl.style.left = (relativeX - dragOffsetX) + 'px';
+      matchEl.style.top = (relativeY - dragOffsetY) + 'px';
+      matchEl.style.right = 'auto';
+      matchEl.style.bottom = 'auto';
+
+      const matchHeadX = relativeX - dragOffsetX + 45;
+      const matchHeadY = relativeY - dragOffsetY + 25;
+
+      if (!isLit) {
+        const strikerRect = strikerStrip.getBoundingClientRect();
+        if (clientX >= strikerRect.left && clientX <= strikerRect.right &&
+            clientY >= strikerRect.top && clientY <= strikerRect.bottom) {
+          
+          if (moveDistance > 2) {
+            frictionScore += moveDistance;
+            createSparks(relativeX, relativeY, 3, 10);
+
+            if (frictionScore > 750) {
+              isLit = true;
+              matchImg.src = 'ไม้ขีดไฟ.png';
+              strikerStrip.innerText = 'จุดติดแล้ว! นำไปจุดตรงกลางกระดาษ';
+              createSparks(relativeX, relativeY, 25, 15);
+            }
+          }
+        }
+      } else {
+        createSparks(matchHeadX, matchHeadY, 2, 4);
+
+        if (!autoBurning) {
+          const screenCenterX = vpRect.width / 2;
+          const screenCenterY = vpRect.height / 2;
+          const distToCenter = Math.hypot(matchHeadX - screenCenterX, matchHeadY - screenCenterY);
+          
+          if (distToCenter < 140) {
+            startAutoBurn(screenCenterX, screenCenterY);
+          }
+        }
+      }
+    }
+
+    function onEnd() { isDraggingMatch = false; }
+
+    matchEl.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+
+    matchEl.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+
+    function drawSmoothPath(context, cx, cy, radius, offset = 0) {
+      context.beginPath();
+      for (let i = 0; i < numPoints; i++) {
+        const angle = (i / numPoints) * Math.PI * 2;
+        const r = (radius + offset) * noiseAngles[i];
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      }
+      context.closePath();
+    }
+
+    function startAutoBurn(cx, cy) {
+      autoBurning = true;
+      burnRadius = 10;
+
+      strikerContainer.style.opacity = '0';
+      matchEl.style.display = 'none';
+
+      const rect = viewport.getBoundingClientRect();
+
+      function burnStep() {
+        fxCtx.clearRect(0, 0, rect.width, rect.height);
+
+        if (burnRadius < maxBurnRadius) {
+          burnRadius += 2.8;
+
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          drawSmoothPath(ctx, cx, cy, burnRadius);
+          ctx.fill();
+          ctx.restore();
+
+          fxCtx.save();
+          drawSmoothPath(fxCtx, cx, cy, burnRadius, 25);
+          fxCtx.strokeStyle = 'rgba(100, 20, 50, 0.4)';
+          fxCtx.lineWidth = 22;
+          fxCtx.shadowColor = 'rgba(60, 10, 30, 0.7)';
+          fxCtx.shadowBlur = 12;
+          fxCtx.stroke();
+
+          drawSmoothPath(fxCtx, cx, cy, burnRadius, 8);
+          fxCtx.strokeStyle = 'rgba(40, 5, 15, 0.9)';
+          fxCtx.lineWidth = 12;
+          fxCtx.stroke();
+
+          drawSmoothPath(fxCtx, cx, cy, burnRadius);
+          fxCtx.strokeStyle = 'rgba(255, 50, 100, 0.85)';
+          fxCtx.lineWidth = 5;
+          fxCtx.shadowColor = '#e91e63';
+          fxCtx.shadowBlur = 12;
+          fxCtx.stroke();
+          fxCtx.restore();
+
+          updateParticles();
+          requestAnimationFrame(burnStep);
+        } else {
+          fxCtx.clearRect(0, 0, rect.width, rect.height);
+          ctx.clearRect(0, 0, rect.width, rect.height);
+          strikerContainer.style.display = 'none';
+          heartTrigger.style.display = 'block';
+        }
+      }
+
+      burnStep();
+    }
+
+    function mainFxLoop() {
+      if (!autoBurning) {
+        const rect = viewport.getBoundingClientRect();
+        fxCtx.clearRect(0, 0, rect.width, rect.height);
+        updateParticles();
+      }
+      requestAnimationFrame(mainFxLoop);
+    }
+    mainFxLoop();
+
+    const heartModal = document.getElementById('heartModal');
+    const waterFill = document.getElementById('waterFill');
+    const bigHeartContainer = document.getElementById('bigHeartContainer');
+
+    heartTrigger.addEventListener('click', () => {
+      waterLevel = 0;
+      waterFill.style.height = '0%';
+      heartTrigger.style.display = 'none';
+      heartModal.style.display = 'flex';
+    });
+
+    let waterLevel = 0;
+    let fillInterval = null;
+
+    function addWater() {
+      if (waterLevel < 100) {
+        waterLevel += 4;
+        if (waterLevel > 100) waterLevel = 100;
+        waterFill.style.height = waterLevel + '%';
+        createFloatingHearts(2);
+
+        if (waterLevel >= 100) {
+          stopWatering();
+          setTimeout(() => {
+            heartModal.style.display = 'none';
+            showPolaroidsSimultaneously();
+            spawnMassiveHearts();
+          }, 350);
+        }
+      }
+    }
+
+    function startWatering() {
+      addWater();
+      fillInterval = setInterval(addWater, 60);
+    }
+
+    function stopWatering() {
+      if (fillInterval) clearInterval(fillInterval);
+    }
+
+    bigHeartContainer.addEventListener('mousedown', startWatering);
+    window.addEventListener('mouseup', stopWatering);
+
+    bigHeartContainer.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      startWatering();
+    }, { passive: false });
+    window.addEventListener('touchend', stopWatering);
+
+    const redHearts = ['❤️', '💖', '💗', '🌹', '✨'];
+
+    function createFloatingHearts(count = 1, customX = null, customY = null) {
+      for (let i = 0; i < count; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'floating-heart';
+        heart.innerText = redHearts[Math.floor(Math.random() * redHearts.length)];
+        
+        const startX = customX !== null ? (customX + (Math.random() * 60 - 30)) : (Math.random() * (viewport.clientWidth - 40) + 20);
+        const startY = customY !== null ? (customY + (Math.random() * 40 - 20)) : (viewport.clientHeight / 2 + 50);
+        
+        heart.style.left = startX + 'px';
+        heart.style.top = startY + 'px';
+        heart.style.fontSize = (Math.random() * 16 + 22) + 'px';
+
+        viewport.appendChild(heart);
+
+        setTimeout(() => { heart.remove(); }, 2200);
+      }
+    }
+
+    function spawnMassiveHearts() {
+      let counter = 0;
+      const interval = setInterval(() => {
+        createFloatingHearts(5);
+        counter++;
+        if (counter > 12) clearInterval(interval);
+      }, 120);
+    }
+
+    const polaroidData = [
+      { img: 'photo1.jpg', top: '12%', left: '15%', rotate: '-7deg', duration: '1.8s', delay: '0s' },
+      { img: 'photo2.jpg', top: '10%', left: '55%', rotate: '6deg', duration: '2.4s', delay: '0.4s' },
+      { img: 'photo5.jpg', top: '36%', left: '36%', rotate: '-2deg', duration: '1.6s', delay: '0.2s' },
+      { img: 'photo3.jpg', top: '58%', left: '16%', rotate: '5deg', duration: '2.2s', delay: '0.6s' },
+      { img: 'photo4.jpg', top: '60%', left: '55%', rotate: '-5deg', duration: '2.0s', delay: '0.3s' }
+    ];
+
+    function showPolaroidsSimultaneously() {
+      const overlay = document.getElementById('polaroidOverlay');
+      const container = document.getElementById('polaroidContainer');
+      container.innerHTML = '';
+      overlay.style.display = 'flex';
+
+      polaroidData.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'polaroid';
+        card.style.top = item.top;
+        card.style.left = item.left;
+        card.style.setProperty('--target-rotate', item.rotate);
+        card.style.setProperty('--anim-duration', item.duration);
+        card.style.setProperty('--anim-delay', item.delay);
+        card.style.zIndex = index + 1;
+
+        card.innerHTML = `
+          <div class="close-card-btn">✕</div>
+          <img src="${item.img}" alt="photo">
+        `;
+
+        card.classList.add('animate-burst');
+
+        setTimeout(() => {
+          card.classList.remove('animate-burst');
+          card.style.opacity = '1';
+          card.classList.add('idle-bounce');
+        }, 750);
+
+        card.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isActive = card.classList.contains('active');
+          document.querySelectorAll('.polaroid').forEach(p => p.classList.remove('active'));
+          
+          if (!isActive) {
+            card.classList.add('active');
+            const rect = card.getBoundingClientRect();
+            createFloatingHearts(6, rect.left + rect.width / 2, rect.top + rect.height / 2);
+          }
+        });
+
+        const closeBtn = card.querySelector('.close-card-btn');
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          card.classList.remove('active');
+        });
+
+        container.appendChild(card);
+      });
+
+      if (continuousHeartsInterval) clearInterval(continuousHeartsInterval);
+      continuousHeartsInterval = setInterval(() => {
+        if (overlay.style.display === 'flex') {
+          createFloatingHearts(1);
+        }
+      }, 400);
+    }
+
+    document.getElementById('polaroidOverlay').addEventListener('click', () => {
+      document.querySelectorAll('.polaroid').forEach(p => p.classList.remove('active'));
+    });
+
+    backBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('polaroidOverlay').style.display = 'none';
+      heartTrigger.style.display = 'block';
+      if (continuousHeartsInterval) {
+        clearInterval(continuousHeartsInterval);
+        continuousHeartsInterval = null;
+      }
+    });
+  </script>
+</body>
+</html>
