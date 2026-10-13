@@ -47,7 +47,6 @@
       overflow: hidden;
     }
 
-    /* กระดาษข้อความด้านหลัง (กระดาษ3) */
     .layer-3-message {
       position: absolute;
       top: 0;
@@ -58,7 +57,6 @@
       z-index: 1;
     }
 
-    /* แคนวาสสำหรับขูดกระดาษ (กระดาษ2) */
     #burnCanvas {
       position: absolute;
       top: 0;
@@ -68,7 +66,6 @@
       z-index: 2;
     }
 
-    /* กล่องด้านหน้า */
     .layer-1-box {
       position: absolute;
       top: 0;
@@ -128,9 +125,10 @@
     .matchstick-item:active { cursor: grabbing; }
     .matchstick-item img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 
+    /* ขยับอิโมจิหัวใจให้ลงมาด้านล่างเพิ่มขึ้น */
     .bouncing-heart-trigger {
       position: absolute;
-      bottom: 35px;
+      bottom: 15px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 75px;
@@ -322,18 +320,19 @@
       animation-delay: var(--anim-delay, 0s);
     }
 
+    /* ขยายขนาดรูปตอนคลิกดูให้ใหญ่ขึ้นกว่าเดิม */
     .polaroid.active {
       position: fixed !important;
       top: 50% !important;
       left: 50% !important;
-      transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
+      transform: translate(-50%, -50%) scale(1.25) rotate(0deg) !important;
       z-index: 999 !important;
       width: fit-content !important;
-      max-width: 82vw !important;
+      max-width: 90vw !important;
       height: auto !important;
-      padding: 8px 8px 12px 8px !important;
-      box-shadow: 0 25px 50px rgba(136, 14, 79, 0.35) !important;
-      border-radius: 6px;
+      padding: 10px 10px 15px 10px !important;
+      box-shadow: 0 30px 60px rgba(136, 14, 79, 0.4) !important;
+      border-radius: 8px;
       animation: none !important;
       opacity: 1 !important;
       display: flex;
@@ -344,7 +343,7 @@
     .polaroid.active img {
       width: auto !important;
       max-width: 100% !important;
-      max-height: 65vh !important;
+      max-height: 75vh !important;
       object-fit: contain !important;
       border-radius: 4px;
       background-color: #ffffff;
@@ -353,7 +352,7 @@
     .polaroid.active .close-card-btn {
       opacity: 1;
       pointer-events: auto;
-      transform: scale(1);
+      transform: scale(1.1);
     }
 
     .back-to-message-btn {
